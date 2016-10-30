@@ -22,14 +22,9 @@
         <hbox id="navigableBox"
               spacing="true"
               visible="false">
-            <popupView id="prevItemsView"
-                       minimizedValue="Yet items">
-                <vbox id="prevItemsContent"/>
-            </popupView>
-            <label value=" - "/>
-            <popupView id="nextItemsView"
-                       minimizedValue="Yet items">
-                <vbox id="nextItemsContent"/>
+            <popupView id="itemsView"
+                       minimizedValue="msg://goToItems">
+                <vbox id="itemsContent"/>
             </popupView>
         </hbox>
         <fieldGroup id="fieldGroup"

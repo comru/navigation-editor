@@ -12,10 +12,10 @@ import com.haulmont.cuba.gui.data.Datasource;
 import com.haulmont.cuba.gui.theme.ThemeConstantsManager;
 import com.haulmont.cuba.gui.xml.layout.ComponentsFactory;
 import com.haulmont.cuba.web.gui.components.WebLinkButton;
+import com.vaadin.ui.themes.ValoTheme;
 
 import javax.inject.Inject;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class CustomerEdit extends AbstractEditor<Customer> {
     private enum Direction {
@@ -36,20 +36,14 @@ public class CustomerEdit extends AbstractEditor<Customer> {
     private Messages messages;
     @Inject
     private FieldGroup fieldGroup;
-
     private NavigableLinkButton prevItemBtn;
-
     private NavigableLinkButton nextItemBtn;
     @Inject
-    private VBoxLayout nextItemsContent;
-    @Inject
-    private VBoxLayout prevItemsContent;
-    @Inject
-    private PopupView prevItemsView;
-    @Inject
-    private PopupView nextItemsView;
-    @Inject
     private ComponentsFactory componentsFactory;
+    @Inject
+    private VBoxLayout itemsContent;
+    @Inject
+    private PopupView itemsView;
 
     @Override
     public void init(Map<String, Object> params) {
@@ -57,12 +51,12 @@ public class CustomerEdit extends AbstractEditor<Customer> {
             prevItemBtn = new NavigableLinkButton();
             prevItemBtn.setDirection(Direction.PREV);
             prevItemBtn.setCaption(getMessage("prevItem"));
-            navigableBox.add(prevItemBtn, 1);
+            navigableBox.add(prevItemBtn, 0);
 
             nextItemBtn = new NavigableLinkButton();
             nextItemBtn.setDirection(Direction.NEXT);
             nextItemBtn.setCaption(getMessage("nextItem"));
-            navigableBox.add(nextItemBtn, 3);
+            navigableBox.add(nextItemBtn);
         }
     }
 
@@ -79,7 +73,6 @@ public class CustomerEdit extends AbstractEditor<Customer> {
             prevItemBtn.setCaption(getMessage("prevItem"));
             prevItemBtn.setNavigableItemId(prevItemId);
             Customer prevItem = navigationEditorDs.getItem(prevItemId);
-            initNavigablePopupView(Direction.PREV, prevItemsView, prevItemsContent);
             if (prevItem != null) {
                 prevItemBtn.setCaption(prevItemBtn.getCaption() + " (" + prevItem.getInstanceName() + ")");
             }
@@ -89,43 +82,64 @@ public class CustomerEdit extends AbstractEditor<Customer> {
             nextItemBtn.setCaption(getMessage("nextItem"));
             nextItemBtn.setNavigableItemId(nextItemId);
             Customer nextItem = navigationEditorDs.getItem(nextItemId);
-            initNavigablePopupView(Direction.NEXT, nextItemsView, nextItemsContent);
             if (nextItem != null) {
                 nextItemBtn.setCaption(nextItemBtn.getCaption() + " (" + nextItem.getInstanceName() + ")");
             }
+
+            initNavigablePopupView();
         }
     }
 
-    private void initNavigablePopupView(Direction direction,
-                                        PopupView popupView, BoxLayout popupContent) {
-        popupView.setEnabled(false);
-        popupContent.removeAll();
+    private void initNavigablePopupView() {
+        itemsView.setEnabled(true);
+        itemsContent.removeAll();
 
         CollectionDatasource.Ordered orderedDs = ((CollectionDatasource.Ordered) navigationEditorDs);
         UUID itemId = getItem().getId();
 
-        Object navigableItemId = direction == Direction.PREV ? orderedDs.prevItemId(itemId) : orderedDs.nextItemId(itemId);
-        if (navigableItemId == null) {
+        List<Object> prevItemIds = getNavigableItems(orderedDs, Direction.PREV, itemId);
+        if (!prevItemIds.isEmpty()) {
+            Collections.reverse(prevItemIds);
+            for (Object prevItemId : prevItemIds) {
+                addLinkBtnToNavigationContent(orderedDs, prevItemId);
+            }
+        }
+
+        Label currItemLab = componentsFactory.createComponent(Label.class);
+        currItemLab.setValue("Current item: " + getItem().getInstanceName());
+        itemsContent.add(currItemLab);
+
+        List<Object> nextItemIds = getNavigableItems(orderedDs, Direction.NEXT, itemId);
+        if (!nextItemIds.isEmpty()) {
+            for (Object nextItemId : nextItemIds) {
+                addLinkBtnToNavigationContent(orderedDs, nextItemId);
+            }
+        }
+    }
+
+    private void addLinkBtnToNavigationContent(CollectionDatasource.Ordered orderedDs, Object prevItemId) {
+        Entity navigationItem = orderedDs.getItem(prevItemId);
+        if (navigationItem == null) {
             return;
         }
+        NavigableLinkButton navigableLinkButton = new NavigableLinkButton();
+        navigableLinkButton.setCaption(navigationItem.getInstanceName());
+        navigableLinkButton.setNavigableItemId((UUID) prevItemId);
+        navigableLinkButton.setDirection(Direction.PREV);
+        itemsContent.add(navigableLinkButton);
+    }
 
-        for (int i = 0; i < 10 && navigableItemId != null; i++) {
-            Entity navigationItem = orderedDs.getItem(navigableItemId);
-            if (navigationItem == null) {
-                return;
-            }
-            NavigableLinkButton navigableLinkButton = new NavigableLinkButton();
-            navigableLinkButton.setCaption(navigationItem.getInstanceName());
-            navigableLinkButton.setNavigableItemId((UUID) navigableItemId);
-            navigableLinkButton.setDirection(direction);
-            popupContent.add(navigableLinkButton);
-
+    private List<Object> getNavigableItems(CollectionDatasource.Ordered orderedDs, Direction direction, Object itemId) {
+        Object navigableItemId = direction == Direction.PREV ? orderedDs.prevItemId(itemId) : orderedDs.nextItemId(itemId);
+        if (navigableItemId == null) {
+            return Collections.emptyList();
+        }
+        List<Object> result = new ArrayList<>();
+        for (int i = 0; i < 5 && navigableItemId != null; i++) {
+            result.add(navigableItemId);
             navigableItemId = direction == Direction.PREV ? orderedDs.prevItemId(navigableItemId) : orderedDs.nextItemId(navigableItemId);
         }
-
-        if (!popupContent.getComponents().isEmpty()) {
-            popupView.setEnabled(true);
-        }
+        return result;
     }
 
     private void replaceItem(UUID goToItemId) {
