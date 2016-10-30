@@ -29,40 +29,40 @@ public class CustomerEdit extends AbstractEditor<Customer> {
     @Inject
     private Datasource<Customer> customerDs;
     @Inject
-    private HBoxLayout navigableBox;
-    @Inject
     private DataSupplier dataSupplier;
     @Inject
     private Messages messages;
     @Inject
     private FieldGroup fieldGroup;
-
-    private NavigableLinkButton prevItemBtn;
-
-    private NavigableLinkButton nextItemBtn;
-    @Inject
-    private VBoxLayout nextItemsContent;
-    @Inject
-    private VBoxLayout prevItemsContent;
     @Inject
     private PopupView prevItemsView;
     @Inject
     private PopupView nextItemsView;
     @Inject
     private ComponentsFactory componentsFactory;
+    @Inject
+    private LookupField goToField;
+    @Inject
+    private HBoxLayout goToBox;
+    private boolean replacing = false;
 
     @Override
     public void init(Map<String, Object> params) {
         if (isEditAction && navigationEditorDs instanceof CollectionDatasource.Ordered) {
-            prevItemBtn = new NavigableLinkButton();
-            prevItemBtn.setDirection(Direction.PREV);
-            prevItemBtn.setCaption(getMessage("prevItem"));
-            navigableBox.add(prevItemBtn, 1);
-
-            nextItemBtn = new NavigableLinkButton();
-            nextItemBtn.setDirection(Direction.NEXT);
-            nextItemBtn.setCaption(getMessage("nextItem"));
-            navigableBox.add(nextItemBtn, 3);
+            goToBox.setVisible(true);
+            goToField.setOptionsDatasource(navigationEditorDs);
+            goToField.addValueChangeListener(e -> {
+                if (e.getValue() == null || replacing) {
+                    return;
+                }
+                Customer selectedItem = (Customer) e.getValue();
+                replacing = true;
+                try {
+                    replaceItem(selectedItem.getId());
+                } finally {
+                    replacing = false;
+                }
+            });
         }
     }
 
@@ -70,61 +70,7 @@ public class CustomerEdit extends AbstractEditor<Customer> {
     @Override
     protected void postInit() {
         if (isEditAction && navigationEditorDs instanceof CollectionDatasource.Ordered) {
-            navigableBox.setVisible(true);
-
-            UUID itemId = getItem().getId();
-
-            UUID prevItemId = (UUID) ((CollectionDatasource.Ordered) navigationEditorDs).prevItemId(itemId);
-            prevItemBtn.setEnabled(prevItemId != null);
-            prevItemBtn.setCaption(getMessage("prevItem"));
-            prevItemBtn.setNavigableItemId(prevItemId);
-            Customer prevItem = navigationEditorDs.getItem(prevItemId);
-            initNavigablePopupView(Direction.PREV, prevItemsView, prevItemsContent);
-            if (prevItem != null) {
-                prevItemBtn.setCaption(prevItemBtn.getCaption() + " (" + prevItem.getInstanceName() + ")");
-            }
-
-            UUID nextItemId = (UUID) ((CollectionDatasource.Ordered) navigationEditorDs).nextItemId(itemId);
-            nextItemBtn.setEnabled(nextItemId != null);
-            nextItemBtn.setCaption(getMessage("nextItem"));
-            nextItemBtn.setNavigableItemId(nextItemId);
-            Customer nextItem = navigationEditorDs.getItem(nextItemId);
-            initNavigablePopupView(Direction.NEXT, nextItemsView, nextItemsContent);
-            if (nextItem != null) {
-                nextItemBtn.setCaption(nextItemBtn.getCaption() + " (" + nextItem.getInstanceName() + ")");
-            }
-        }
-    }
-
-    private void initNavigablePopupView(Direction direction,
-                                        PopupView popupView, BoxLayout popupContent) {
-        popupView.setEnabled(false);
-        popupContent.removeAll();
-
-        CollectionDatasource.Ordered orderedDs = ((CollectionDatasource.Ordered) navigationEditorDs);
-        UUID itemId = getItem().getId();
-
-        Object navigableItemId = direction == Direction.PREV ? orderedDs.prevItemId(itemId) : orderedDs.nextItemId(itemId);
-        if (navigableItemId == null) {
-            return;
-        }
-
-        for (int i = 0; i < 10 && navigableItemId != null; i++) {
-            Entity navigationItem = orderedDs.getItem(navigableItemId);
-            if (navigationItem == null) {
-                return;
-            }
-            NavigableLinkButton navigableLinkButton = new NavigableLinkButton();
-            navigableLinkButton.setCaption(navigationItem.getInstanceName());
-            navigableLinkButton.setNavigableItemId((UUID) navigableItemId);
-            navigableLinkButton.setDirection(direction);
-            popupContent.add(navigableLinkButton);
-
-            navigableItemId = direction == Direction.PREV ? orderedDs.prevItemId(navigableItemId) : orderedDs.nextItemId(navigableItemId);
-        }
-
-        if (!popupContent.getComponents().isEmpty()) {
-            popupView.setEnabled(true);
+            goToField.setValue(getItem());
         }
     }
 
@@ -183,49 +129,15 @@ public class CustomerEdit extends AbstractEditor<Customer> {
 
                             @Override
                             public void actionPerform(Component component) {
-                                fieldGroup.requestFocus();
+                                replacing = true;
+                                try {
+                                    goToField.setValue(getItem());
+                                    fieldGroup.requestFocus();
+                                } finally {
+                                    replacing = false;
+                                }
                             }
                         }
                 });
-    }
-
-    private class NavigableLinkButton extends WebLinkButton {
-        private UUID navigableItemId;
-        private Direction direction;
-
-        public NavigableLinkButton() {
-            super();
-            NavigableLinkButton.this.setAction(new AbstractAction("navigation") {
-                @Override
-                public void actionPerform(Component component) {
-                    navigation();
-                }
-            });
-        }
-
-        public UUID getNavigableItemId() {
-            return navigableItemId;
-        }
-
-        public void setNavigableItemId(UUID navigableItemId) {
-            this.navigableItemId = navigableItemId;
-        }
-
-        public Direction getDirection() {
-            return direction;
-        }
-
-        public void setDirection(Direction direction) {
-            this.direction = direction;
-        }
-
-        public void navigation() {
-            if (navigableItemId == null) {
-                String notifyMsg = direction == Direction.PREV ? getMessage("prevItemIsEmpty") : getMessage("nextItemIsEmpty");
-                showNotification(notifyMsg, NotificationType.HUMANIZED);
-                return;
-            }
-            replaceItem(navigableItemId);
-        }
     }
 }

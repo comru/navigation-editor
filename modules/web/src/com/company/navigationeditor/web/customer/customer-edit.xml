@@ -19,18 +19,9 @@
                 width="800"/>
     <layout expand="windowActions"
             spacing="true">
-        <hbox id="navigableBox"
-              spacing="true"
-              visible="false">
-            <popupView id="prevItemsView"
-                       minimizedValue="Yet items">
-                <vbox id="prevItemsContent"/>
-            </popupView>
-            <label value=" - "/>
-            <popupView id="nextItemsView"
-                       minimizedValue="Yet items">
-                <vbox id="nextItemsContent"/>
-            </popupView>
+        <hbox id="goToBox" spacing="true" visible="false">
+            <label value="msg://goTo" align="MIDDLE_CENTER"/>
+            <lookupField id="goToField" nullOptionVisible="false" filterMode="CONTAINS" width="250px"/>
         </hbox>
         <fieldGroup id="fieldGroup"
                     datasource="customerDs">
