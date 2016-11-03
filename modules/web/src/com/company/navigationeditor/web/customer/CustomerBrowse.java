@@ -4,6 +4,7 @@ import com.company.navigationeditor.entity.Customer;
 import com.haulmont.cuba.core.entity.Entity;
 import com.haulmont.cuba.gui.components.AbstractLookup;
 import com.haulmont.cuba.gui.components.Table;
+import com.haulmont.cuba.gui.components.Window;
 import com.haulmont.cuba.gui.components.actions.EditAction;
 import com.haulmont.cuba.gui.data.CollectionDatasource;
 import com.haulmont.cuba.gui.data.DataSupplier;
@@ -31,6 +32,13 @@ public class CustomerBrowse extends AbstractLookup {
                 editActionParams.put("navigationEditorDs", customersDs);
 
                 super.internalOpenEditor(datasource, existingItem, parentDs, editActionParams);
+            }
+
+            @Override
+            protected void afterWindowClosed(Window window) {
+                super.afterWindowClosed(window);
+
+                target.refresh();
             }
         });
     }

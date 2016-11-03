@@ -1,59 +1,29 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<window xmlns="http://schemas.haulmont.com/cuba/window.xsd"
-        caption="msg://editCaption"
-        class="com.company.navigationeditor.web.customer.CustomerEdit"
-        datasource="customerDs"
-        focusComponent="fieldGroup"
-        messagesPack="com.company.navigationeditor.web.customer">
+<window xmlns="http://schemas.haulmont.com/cuba/window.xsd" caption="msg://editCaption"
+        class="com.company.navigationeditor.web.customer.CustomerEdit" datasource="customerDs"
+        focusComponent="fieldGroup" messagesPack="com.company.navigationeditor.web.customer">
     <dsContext>
-        <datasource id="customerDs"
-                    class="com.company.navigationeditor.entity.Customer"
-                    view="customer-view">
-            <datasource id="addressDs"
-                        property="address"/>
-            <collectionDatasource id="ordersDs"
-                                  property="orders"/>
+        <datasource id="customerDs" class="com.company.navigationeditor.entity.Customer" view="customer-view">
+            <datasource id="addressDs" property="address"/>
+            <collectionDatasource id="ordersDs" property="orders"/>
         </datasource>
     </dsContext>
-    <dialogMode height="600"
-                width="800"/>
-    <layout expand="windowActions"
-            spacing="true">
-        <hbox id="navigableBox"
-              spacing="true"
-              visible="false">
-            <popupView id="prevItemsView"
-                       minimizedValue="Yet items">
-                <vbox id="prevItemsContent"/>
-            </popupView>
-            <label value=" - "/>
-            <popupView id="nextItemsView"
-                       minimizedValue="Yet items">
-                <vbox id="nextItemsContent"/>
-            </popupView>
-        </hbox>
-        <fieldGroup id="fieldGroup"
-                    datasource="customerDs">
+    <dialogMode height="600" width="800"/>
+    <layout expand="windowActions" spacing="true">
+        <fieldGroup id="fieldGroup" datasource="customerDs">
             <column width="250px">
                 <field id="name"/>
                 <field id="status"/>
-                <field id="city"
-                       datasource="addressDs"/>
-                <field id="country"
-                       datasource="addressDs"/>
+                <field id="city" datasource="addressDs"/>
+                <field id="country" datasource="addressDs"/>
                 <field id="user"/>
             </column>
         </fieldGroup>
-        <groupBox id="ordersBox"
-                  caption="msg://com.company.navigationeditor.entity/Customer.orders">
-            <table id="ordersTable"
-                   height="200px"
-                   width="100%">
+        <groupBox id="ordersBox" caption="msg://com.company.navigationeditor.entity/Customer.orders">
+            <table id="ordersTable" height="200px" width="100%">
                 <actions>
-                    <action id="create"
-                            openType="DIALOG"/>
-                    <action id="edit"
-                            openType="DIALOG"/>
+                    <action id="create" openType="DIALOG"/>
+                    <action id="edit" openType="DIALOG"/>
                     <action id="remove"/>
                 </actions>
                 <columns>
@@ -68,7 +38,13 @@
                 </buttonsPanel>
             </table>
         </groupBox>
-        <frame id="windowActions"
-               screen="editWindowActions"/>
+        <hbox id="windowActions" spacing="true">
+            <frame screen="editWindowActions"/>
+            <button id="createItemBtn" caption="msg://createItem" icon="icons/create.png" invoke="createItem" visible="false"/>
+            <button id="applyItemBtn" caption="msg://apply" invoke="applyItem" visible="false"/>
+            <hbox id="navigationalBox" spacing="true" visible="false">
+                <lookupField id="goToField" nullOptionVisible="false" width="250px"/>
+            </hbox>
+        </hbox>
     </layout>
 </window>

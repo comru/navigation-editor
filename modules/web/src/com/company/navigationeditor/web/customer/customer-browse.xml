@@ -10,7 +10,7 @@
                               class="com.company.navigationeditor.entity.Customer"
                               view="customer-view">
             <query>
-                <![CDATA[select e from ne$Customer e]]>
+                <![CDATA[select e from ne$Customer e order by e.name]]>
             </query>
         </collectionDatasource>
     </dsContext>
@@ -27,7 +27,7 @@
                width="100%">
             <actions>
                 <action id="create" openType="DIALOG"/>
-                <action id="edit" openType="DIALOG"/>
+                <action id="edit"/>
                 <action id="remove"/>
             </actions>
             <columns>
